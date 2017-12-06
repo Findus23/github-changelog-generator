@@ -49,7 +49,7 @@ function setup(repo, token)
             fetchIssuesSince(repository, [], isoDate, 1);
         });
     });
-    $('#copyButton').on('click', function(event) {
+    $('#copyMarkdown').on('click', function(event) {
         var copyTextarea = document.querySelector('#markdown');
         copyTextarea.select();
 
@@ -61,6 +61,19 @@ function setup(repo, token)
             console.log('Oops, unable to copy');
         }
     });
+    $('#copyHTML').on('click', function(event) {
+        var copyHTML = document.querySelector('#html');
+        copyHTML.select();
+
+        try {
+            var successful = document.execCommand('copy');
+            var msg = successful ? 'successful' : 'unsuccessful';
+            console.log('Copying text command was ' + msg);
+        } catch (err) {
+            console.log('Oops, unable to copy');
+        }
+    });
+
 }
 
 function getSortRankingOfLabel(memo, label)
@@ -97,23 +110,22 @@ function renderIssues(repository, issues)
 
     var $issues = $('#issues');
     var $markdown = $('#markdown');
+    var $html = $('#html');
 
 
-    $issues.append("\n\n<br/><div class='notAnIssue'>" + repository + "</div>\n\n");
     markdown+="\n#### " + repository +"\n";
-
+    var md = window.markdownit();
     if (issues && issues.length === 0) {
-        $issues.append('<li class="notAnIssue">No issues found</li>' + "\n");
         markdown+="**" + "No issues found" +"**\n";
     } else {
         $.each(issues, function (index, issue) {
-            $('#issues').append('<li>' + formatChangelogEntry(issue, issue.authors, true) + '</li>' + "\n");
             markdown += formatChangelogEntry(issue, issue.authors, false) + '\n';
             $markdown.val(markdown);
-
+            var result = md.render(markdown);
+            $issues.html(result);
+            $html.val(result)
         });
     }
-    $markdown.val(markdown);
 }
 
 function onStart()
@@ -163,10 +175,7 @@ function onLimitExceeded()
 }
 
 function formatAuthor(user) {
-    return {
-        html: '<a href="' + user.html_url + '">@' + user.login + '</a>',
-        markdown: '[@' + user.login + '](' + user.html_url + ')'
-    };
+    return '[@' + user.login + '](' + user.html_url + ')';
 }
 
 function encodedStr(rawStr)
@@ -176,22 +185,12 @@ function encodedStr(rawStr)
     });
 }
 
-function formatChangelogEntry(issue, authors, html)
+function formatChangelogEntry(issue, authors)
 {
-    var description;
-    if (html) {
-        description = '<a href="' + issue.html_url + '">#' + issue.number + '</a> ' + encodedStr(issue.title);
-    } else {
-        description = '[#' + issue.number + '](' + issue.html_url + ') ' + encodedStr(issue.title);
-    }
+    var description = '- [#' + issue.number + '](' + issue.html_url + ') ' + encodedStr(issue.title);
 
     if (authors.length) {
-        description += ' [by ' + authors.map(function(author){
-            if (html) {
-                return author.html
-            }
-            return author.markdown
-        }).join(', ') + ']';
+        description += ' [by ' + authors.join(', ') + ']';
     }
 
     return description;
