@@ -49,7 +49,7 @@ function setup(repo, token)
             fetchIssuesSince(repository, [], isoDate, 1);
         });
     });
-    $('#copyMarkdown').on('click', function(event) {
+    $('#copyMarkdown').on('click', function() {
         var copyTextarea = document.querySelector('#markdown');
         copyTextarea.select();
 
@@ -61,7 +61,7 @@ function setup(repo, token)
             console.log('Oops, unable to copy');
         }
     });
-    $('#copyHTML').on('click', function(event) {
+    $('#copyHTML').on('click', function() {
         var copyHTML = document.querySelector('#html');
         copyHTML.select();
 
@@ -464,25 +464,20 @@ function callGithubApi(params, expectArray)
         params.headers = {"Authorization": 'token ' + getAuthToken()};
     }
 
-    if ($.support.cors) {
-        var success = params.success;
-        if ($.isFunction(success)) {
-            params.success = function (result, status, xhr) {
-                console.log('got api response', arguments);
+    var success = params.success;
+    if ($.isFunction(success)) {
+        params.success = function (result, status, xhr) {
+            console.log('got api response', arguments);
 
-                if (!result || (expectArray && !$.isArray(result))) {
-                    alert('Got an unexpected response');
-                    return;
-                }
-
-                logXRateLimit(xhr);
-
-                success.call(this, result, xhr)
+            if (!result || (expectArray && !$.isArray(result))) {
+                alert('Got an unexpected response');
+                return;
             }
+
+            logXRateLimit(xhr);
+
+            success.call(this, result, xhr)
         }
-    } else {
-        alert('CORS is not supported, please try another browser');
-        return;
     }
 
     $.ajax(params);
