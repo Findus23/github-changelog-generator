@@ -1,7 +1,7 @@
 /*!
- * Piwik - free/libre analytics platform
+ * Matomo - free/libre analytics platform
  *
- * @link http://piwik.org
+ * @link http://matomo.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 
@@ -11,7 +11,7 @@ var config = {};
  * GitHub Repository to fetch issues from. Multiple repositories can be specified comma separated.
  * @type {string}
  */
-config.repository = 'piwik/piwik';
+config.repository = 'matomo-org/matomo';
 
 /**
  * See https://developer.github.com/v3/oauth_authorizations/#create-a-new-authorization
