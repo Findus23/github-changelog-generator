@@ -7,10 +7,10 @@
 
 var limitExceeded = false;
 var repositoriesDone;
-var markdown="";
+var markdown = "";
+var authorStats = {};
 
-function setup(repo, token)
-{
+function setup(repo, token) {
     if (repo) {
         $('#repository').val(repo);
     }
@@ -41,11 +41,11 @@ function setup(repo, token)
         }
 
         var isoDate = date + 'T' + time + ':00Z';
-        markdown="";
+        markdown = "";
 
         onStart();
 
-        $.each(getRepositories(), function (index, repository) {
+        $.each(getRepositories(), function(index, repository) {
             fetchIssuesSince(repository, [], isoDate, 1);
         });
     });
@@ -76,8 +76,7 @@ function setup(repo, token)
 
 }
 
-function getSortRankingOfLabel(memo, label)
-{
+function getSortRankingOfLabel(memo, label) {
     var value = _.lastIndexOf(config.sortByLabels, label, false);
 
     if (value !== -1) {
@@ -87,8 +86,7 @@ function getSortRankingOfLabel(memo, label)
     return memo;
 }
 
-function sortIssues(issueA, issueB)
-{
+function sortIssues(issueA, issueB) {
     var labelsA = getLabelsFromIssue(issueA);
     var labelsB = getLabelsFromIssue(issueB);
 
@@ -102,8 +100,7 @@ function sortIssues(issueA, issueB)
     return indexA > indexB ? -1 : 1;
 }
 
-function renderIssues(repository, issues)
-{
+function renderIssues(repository, issues) {
     if (config.sortByLabels.length) {
         issues.sort(sortIssues);
     }
@@ -113,12 +110,12 @@ function renderIssues(repository, issues)
     var $html = $('#html');
 
 
-    markdown+="\n#### " + repository +"\n";
+    markdown += "\n#### " + repository + "\n";
     var md = window.markdownit();
     if (issues && issues.length === 0) {
-        markdown+="**" + "No issues found" +"**\n";
+        markdown += "**" + "No issues found" + "**\n";
     } else {
-        $.each(issues, function (index, issue) {
+        $.each(issues, function(index, issue) {
             markdown += formatChangelogEntry(issue, issue.authors, false) + '\n';
             $markdown.val(markdown);
             var result = md.render(markdown);
@@ -128,8 +125,7 @@ function renderIssues(repository, issues)
     }
 }
 
-function onStart()
-{
+function onStart() {
     repositoriesDone = {};
 
     $('#issues').html('');
@@ -138,8 +134,7 @@ function onStart()
     $('#numIssues').text('');
 }
 
-function onEnd(repository)
-{
+function onEnd(repository) {
     repositoriesDone[repository] = true;
 
     if (!haveAllRepositoriesEnded()) {
@@ -154,10 +149,9 @@ function onEnd(repository)
     $('#numIssues').text('Found ' + numIssuesClosed + ' closed issues');
 }
 
-function haveAllRepositoriesEnded()
-{
+function haveAllRepositoriesEnded() {
     var done = true;
-    $.each(getRepositories(), function (i, repository) {
+    $.each(getRepositories(), function(i, repository) {
         if (!(repository in repositoriesDone)) {
             done = false;
         }
@@ -166,8 +160,7 @@ function haveAllRepositoriesEnded()
     return done;
 }
 
-function onLimitExceeded()
-{
+function onLimitExceeded() {
     limitExceeded = true;
     $('#status').text('Limit exceeded!');
     $('#limit').addClass('exceeded');
@@ -178,15 +171,13 @@ function formatAuthor(user) {
     return '[@' + user.login + '](' + user.html_url + ')';
 }
 
-function encodedStr(rawStr)
-{
-    return rawStr.replace(/[\u00A0-\u9999<>\&]/gim, function (i) {
+function encodedStr(rawStr) {
+    return rawStr.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
         return '&#' + i.charCodeAt(0) + ';';
     });
 }
 
-function formatChangelogEntry(issue, authors)
-{
+function formatChangelogEntry(issue, authors) {
     var description = '- [#' + issue.number + '](' + issue.html_url + ') ' + encodedStr(issue.title);
 
     if (authors.length) {
@@ -196,14 +187,13 @@ function formatChangelogEntry(issue, authors)
     return description;
 }
 
-function fetchIssuesSince (repository, issues, isoDate, page)
-{
+function fetchIssuesSince(repository, issues, isoDate, page) {
     callGithubApi({
-        service : 'repos/' + repository + '/issues',
-        data : {since: isoDate, state: 'closed', direction: 'asc', filter: 'all', page: page},
-        success : function(result, xhr) {
+        service: 'repos/' + repository + '/issues',
+        data: {since: isoDate, state: 'closed', direction: 'asc', filter: 'all', page: page},
+        success: function(result, xhr) {
 
-            $.each(result, function (index, issue) {
+            $.each(result, function(index, issue) {
 
                 if (hasIssueAnIgnoredLabel(issue)) {
                     return;
@@ -239,35 +229,31 @@ function fetchIssuesSince (repository, issues, isoDate, page)
     return issues;
 }
 
-function isPullRequest(issue)
-{
+function isPullRequest(issue) {
     return !!issue.pull_request;
 }
 
-function isPullRequestMerged(issue)
-{
+function isPullRequestMerged(issue) {
     var pullRequest = getPullRequest(issue.pull_request.url);
 
     return pullRequest && pullRequest.merged;
 }
 
-function getLabelsFromIssue(issue)
-{
+function getLabelsFromIssue(issue) {
     if (!issue.labels) {
         return [];
     }
 
     var labels = [];
 
-    for (index = 0; index < issue.labels.length; index++) {
+    for (var index = 0; index < issue.labels.length; index++) {
         labels.push(issue.labels[index].name);
     }
 
     return labels;
 }
 
-function hasIssueAnIgnoredLabel(issue)
-{
+function hasIssueAnIgnoredLabel(issue) {
     var labels = getLabelsFromIssue(issue);
 
     if (!labels.length) {
@@ -289,8 +275,7 @@ function hasIssueAnIgnoredLabel(issue)
     return false;
 }
 
-function hasIssueAnIgnoredMilestone(issue)
-{
+function hasIssueAnIgnoredMilestone(issue) {
     if (!issue || !issue.milestone || !issue.milestone.title) {
         return false;
     }
@@ -303,7 +288,7 @@ function hasIssueAnIgnoredMilestone(issue)
     for (index = 0; index < milestonesToIgnore.length; index++) {
         milestoneToIgnore = milestonesToIgnore[index];
 
-        var re = new RegExp( milestoneToIgnore );
+        var re = new RegExp(milestoneToIgnore);
 
         if (re.test(milestone)) {
             console.log('issue has an ignored milestone ', milestoneToIgnore, issue);
@@ -314,9 +299,8 @@ function hasIssueAnIgnoredMilestone(issue)
     return false;
 }
 
-function isDateOlderThan(isoDate, isoDateToCompare)
-{
-    var date1        = new Date(isoDate);
+function isDateOlderThan(isoDate, isoDateToCompare) {
+    var date1 = new Date(isoDate);
     var date2Compare = new Date(isoDateToCompare);
 
     var diff = date1 - date2Compare;
@@ -329,15 +313,14 @@ function isDateOlderThan(isoDate, isoDateToCompare)
     return false;
 }
 
-function logXRateLimit(xhr)
-{
+function logXRateLimit(xhr) {
     if (!xhr) {
         return;
     }
 
     var current = xhr.getResponseHeader('X-RateLimit-Remaining');
-    var total   = xhr.getResponseHeader('X-RateLimit-Limit');
-    var limit   = 'Remaining requests: ' + current + ' of ' + total;
+    var total = xhr.getResponseHeader('X-RateLimit-Limit');
+    var limit = 'Remaining requests: ' + current + ' of ' + total;
 
     if (0 === current || '0' === current) {
         onLimitExceeded();
@@ -346,8 +329,7 @@ function logXRateLimit(xhr)
     $('#limit').html(limit);
 }
 
-function hasNextPage(xhr)
-{
+function hasNextPage(xhr) {
     var link = xhr.getResponseHeader('Link');
 
     if (!link) {
@@ -357,20 +339,19 @@ function hasNextPage(xhr)
     return -1 !== link.indexOf('rel="next"');
 }
 
-function makeArrayUnique(array){
+function makeArrayUnique(array) {
     return array.filter(function(el, index, arr) {
-        return index == arr.indexOf(el);
+        return index === arr.indexOf(el);
     });
 }
 
-function getPullRequest(url)
-{
+function getPullRequest(url) {
     var pullRequest;
 
     callGithubApi({
         async: false,
-        service : url.replace('https://api.github.com/', ''),
-        success : function(result) {
+        service: url.replace('https://api.github.com/', ''),
+        success: function(result) {
             pullRequest = result;
         }
     }, false);
@@ -378,8 +359,17 @@ function getPullRequest(url)
     return pullRequest;
 }
 
-function getCommitter(issue, page)
-{
+function createAuthorStats(authors) {
+    $.each(authors, function(index, author) {
+        if (!(author in authorStats)) {
+            authorStats[author] = 1;
+        } else {
+            authorStats[author] += 1
+        }
+    })
+}
+
+function getCommitter(issue, page) {
     var authors = [];
 
     if (isPullRequest(issue)) {
@@ -389,18 +379,18 @@ function getCommitter(issue, page)
 
     callGithubApi({
         async: false,
-        service : issue.events_url,
-        data : {page: page},
-        success : function(result, xhr) {
+        service: issue.events_url,
+        data: {page: page},
+        success: function(result, xhr) {
 
-            $.each(result, function (index, event) {
-                if (event.event != 'referenced' && event.event != 'closed' && event.event != 'assigned') {
+            $.each(result, function(index, event) {
+                if (event.event !== 'referenced' && event.event !== 'closed' && event.event !== 'assigned') {
                     // we want to list only authors who have contributed code
                     return;
                 }
 
                 // the "assigned" event does not require a commit_id as we always credit the assigned user
-                var onlyCreditAuthorWhenCommitFound = (event.event == 'referenced' || event.event == 'closed');
+                var onlyCreditAuthorWhenCommitFound = (event.event === 'referenced' || event.event === 'closed');
                 if (onlyCreditAuthorWhenCommitFound && !event.commit_id) {
                     console.log('Found a event.event = ' + event.event + ' but it has no commit_id so we do not credit this author', event);
                     return;
@@ -417,23 +407,17 @@ function getCommitter(issue, page)
         }
     }, true);
 
-    authors = makeArrayUnique(authors);
-
-    return authors;
 }
 
-function getRepositories()
-{
+function getRepositories() {
     return $('#repository').val().split(',');
 }
 
-function getAuthToken()
-{
+function getAuthToken() {
     return $('#authtoken').val();
 }
 
-function callGithubApi(params, expectArray)
-{
+function callGithubApi(params, expectArray) {
     if (limitExceeded) {
         console.log('Ignoring call to GitHub API, limit exceeded', params);
         return;
@@ -445,7 +429,7 @@ function callGithubApi(params, expectArray)
         params.url = "https://api.github.com/" + params.service;
     }
 
-    params.error = function (result) {
+    params.error = function(result) {
         console.log('error fetching resource', result);
 
         var message = 'Error while requesting GitHub API: ';
@@ -466,10 +450,10 @@ function callGithubApi(params, expectArray)
 
     var success = params.success;
     if ($.isFunction(success)) {
-        params.success = function (result, status, xhr) {
+        params.success = function(result, status, xhr) {
             console.log('got api response', arguments);
 
-            if (!result || (expectArray && !$.isArray(result))) {
+            if (!result || (expectArray && !Array.isArray(result))) {
                 alert('Got an unexpected response');
                 return;
             }
