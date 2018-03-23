@@ -180,7 +180,7 @@ function encodedStr(rawStr) {
 function formatChangelogEntry(issue, authors) {
     var description = '- [#' + issue.number + '](' + issue.html_url + ') ' + encodedStr(issue.title);
 
-    if (authors.length) {
+    if (authors && authors.length) {
         description += ' [by ' + authors.join(', ') + ']';
     }
 
@@ -384,7 +384,7 @@ function getCommitter(issue, page) {
         success: function(result, xhr) {
 
             $.each(result, function(index, event) {
-                if (event.event !== 'referenced' && event.event !== 'closed' && event.event !== 'assigned') {
+                if (event.event !== 'closed' && event.event !== 'assigned') {
                     // we want to list only authors who have contributed code
                     return;
                 }
@@ -406,6 +406,8 @@ function getCommitter(issue, page) {
             }
         }
     }, true);
+    createAuthorStats(authors);
+    return authors;
 
 }
 
